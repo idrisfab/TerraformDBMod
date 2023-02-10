@@ -1,6 +1,6 @@
 variable "name" {
  type = string
- default= "Nathan.F"
+ default= "Nathan.F_Idris.F"
 }
 
 variable  "vpccidr" {
@@ -25,7 +25,7 @@ variable  "cidrsubpr2" {
 
 variable  "AZa" {
  type = string
- default = "eu-west-2a"
+ default = "lon1"
 }
 
 variable  "AZb" {

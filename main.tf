@@ -1,7 +1,6 @@
-provider "aws" {
-  region = "eu-west-2"
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+provider "digitalocean" {
+  region  = "lon01"
+  token   = var.do_token
 }
 
 module vpc {
@@ -29,10 +28,7 @@ module "webserver" {
     username = module.db.username
     password = module.db.password
     db_name = module.db.db_name
-    database_instance = module.db.instance_name
-
-    
-    
+    database_instance = module.db.instance_name   
 }
 
 

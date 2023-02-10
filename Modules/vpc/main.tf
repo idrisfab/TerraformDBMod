@@ -1,8 +1,14 @@
-resource "aws_vpc" "mainvpc" {
-  cidr_block = var.vpccidr
-  tags = {
-    Name = "${var.name}.tf.vpc"
-  }
+/**
+
+resource "digitalocean_vpc" "example_vpc" {
+  name = "example-vpc"
+  cidr = "10.0.0.0/16"
+}
+
+resource "digitalocean_network" "example_network" {
+  name    = "example-network"
+  vpc_id  = digitalocean_vpc.example_vpc.id
+  cidr    = "10.0.0.0/24"
 }
 
 # Create an igw
@@ -174,4 +180,108 @@ resource "aws_db_subnet_group" "maindba" {
   }   
  }
 
+ */
+
+
+provider "digitalocean" {
+  version = "2.0"
+}
+
+resource "digitalocean_vpc" "example_vpc" {
+  name = "example-vpc"
+  cidr = "10.0.0.0/16"
+
+}
+
+resource "digitalocean_network" "public_network_1" {
+  name = "private-network-1"
+  vpc_id = digitalocean_vpc.example_vpc.id
+  ip_version = "ipv4"
+  cidr    = "10.0.1.0/24"
+
+}
+
+resource "digitalocean_network" "private_network_1" {
+  name = "private-network-1"
+  vpc_id = digitalocean_vpc.example_vpc.id
+  ip_version = "ipv4"
+  cidr    = "10.0.2.0/24"
+
+}
+
+resource "digitalocean_network" "private_network_2" {
+  name = "private-network-2"
+  vpc_id = digitalocean_vpc.example_vpc.id
+  ip_version = "ipv4"
+  cidr    = "10.0.3.0/24"
+}
+
+resource "digitalocean_internet_gateway" "example_internet_gateway" {
+  name = "example-internet-gateway"
+  vpc_id = digitalocean_vpc.example_vpc.id
+}
+
+resource "digitalocean_route_table" "example_public_route_table" {
+  name = "example-public-route-table"
+  vpc_id = digitalocean_vpc.example_vpc.id
+
+  routes = [
+    {
+      destination_network = "10.0.1.0/24"
+      gateway_id = digitalocean_internet_gateway.example_internet_gateway.id
+    },
+  ]
+}
+
+resource "digitalocean_route_table" "example_private_route_table" {
+  name = "example-private-route-table"
+  vpc_id = digitalocean_vpc.example_vpc.id
+  routes = [
+    {
+      destination_networks = ["10.0.2.0/24", "10.0.3.0/24"]
+          },
+  ]
+}
+
+resource "digitalocean_firewall" "web_firewall" {
+  name        = "web-firewall"
+  vpc_id      = digitalocean_vpc.example_vpc.id
+  inbound_rule = [
+    {
+      protocol = "tcp"
+      port_range = "80"
+      source_addresses = ["0.0.0.0/0"]
+    },
+    {
+      protocol = "tcp"
+      port_range = "443"
+      source_addresses = ["0.0.0.0/0"]
+    },
+    {
+      protocol = "tcp"
+      port_range = "5000"
+      source_addresses = ["0.0.0.0/0"]
+    },
+    {
+    protocol = "tcp"
+      port_range = "22"
+      source_addresses = ["0.0.0.0/0"]
+    },
+  ]
+}
+
+resource "digitalocean_db_subnet_group" "example_db_subnet_group" {
+  name = "example-db-subnet-group"
+
+  subnet_ids = [
+    digitalocean_network.private_network_1.id,
+    digitalocean_network.private_network_2.id,
+  ]
+
+  ingress_rules = [
+    {
+      security_group_id = digitalocean_firewall.web_firewall.id
+    },
+  ]
+}
 
